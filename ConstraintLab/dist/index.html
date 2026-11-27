@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Définissez un problème de contraintes et observez sa résolution étape par étape.">
+  <meta name="theme-color" content="#f6f7f3">
+  <title>ConstraintLab · Programmation par contraintes</title>
+  <link rel="icon" href="./mark.svg">
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+  <a class="skip-link" href="#page-title">Aller au contenu</a>
+  <header class="topbar">
+    <a class="brand" href="#atelier"><img src="./mark.png" alt=""><span>Constraint<span>Lab</span></span></a>
+    <span class="top-tagline">Laboratoire de programmation par contraintes</span>
+    <span class="private-label"><span class="lock" aria-hidden="true"></span> Espace privé</span>
+  </header>
+  <div class="shell">
+    <aside class="sidebar">
+      <nav aria-label="Navigation principale">
+        <p class="side-label">LABORATOIRE</p>
+        <a class="nav-link" href="#atelier" data-view="atelier" aria-current="page"><span class="nav-icon nav-grid" aria-hidden="true"></span>Atelier <span class="nav-arrow" aria-hidden="true">›</span></a>
+        <a class="nav-link" href="#exemples" data-view="exemples"><span class="nav-icon nav-book" aria-hidden="true"></span>Exemples <span class="nav-arrow" aria-hidden="true">›</span></a>
+        <a class="nav-link" href="#notions" data-view="notions"><span class="nav-icon nav-info" aria-hidden="true">i</span>Notions clés <span class="nav-arrow" aria-hidden="true">›</span></a>
+      </nav>
+      <nav class="example-nav" aria-label="Raccourcis vers les exemples">
+        <p class="side-label">EXEMPLES À TESTER</p>
+        <div id="example-links"></div>
+      </nav>
+      <div class="sidebar-foot">
+        <span class="notation">CSP = (X, D, C)</span>
+        <p>Variables, domaines et contraintes.</p>
+        <a href="#notions">Voir les définitions <span aria-hidden="true">↗</span></a>
+      </div>
+    </aside>
+    <main class="page" id="main">
+      <section class="hero" id="hero">
+        <div class="hero-copy">
+          <p class="eyebrow"><span aria-hidden="true"></span> ATELIER INTERACTIF</p>
+          <h1 id="page-title" tabindex="-1">La programmation<br>par contraintes, <em>pas à pas.</em></h1>
+          <p>Définis un problème et observe comment le solveur réduit<br class="wide-only"> les domaines, explore les branches et trouve les solutions.</p>
+        </div>
+        <canvas class="hero-graph" id="hero-graph" width="480" height="300" aria-hidden="true"></canvas>
+      </section>
+      <section id="atelier" class="view">
+        <div class="work-heading">
+          <div>
+            <p class="section-label">ATELIER DE RÉSOLUTION</p>
+            <h2 id="problem-heading">Coloration d’un triangle</h2>
+            <p id="problem-description"></p>
+          </div>
+          <button type="button" class="button secondary" id="new-problem"><span aria-hidden="true">＋</span> Nouveau problème</button>
+        </div>
+        <div class="work-grid">
+          <article class="card editor">
+            <header class="card-header">
+              <div class="card-symbol" aria-hidden="true">≡</div>
+              <div><h3>Modèle du problème</h3><p>Variables, domaines et contraintes</p></div>
+            </header>
+            <form id="problem-form" novalidate>
+              <section class="form-section" aria-labelledby="variable-heading">
+                <div class="subheading"><h4 id="variable-heading">Variables</h4><span class="count" id="variable-count"></span></div>
+                <div class="variable-labels" aria-hidden="true"><span>Nom</span><span>Domaine</span></div>
+                <div id="variables" class="fields"></div>
+                <button type="button" class="text-button" id="add-variable"><span aria-hidden="true">＋</span> Ajouter une variable</button>
+              </section>
+              <section class="form-section constraints" aria-labelledby="constraint-heading">
+                <div class="subheading"><h4 id="constraint-heading">Contraintes</h4><span class="count" id="constraint-count"></span></div>
+                <div id="constraints" class="fields"></div>
+                <div class="add-constraints">
+                  <button type="button" class="text-button" id="add-binary"><span aria-hidden="true">＋</span> Binaire</button>
+                  <button type="button" class="text-button" id="add-unary"><span aria-hidden="true">＋</span> Unaire</button>
+                </div>
+              </section>
+              <details class="settings">
+                <summary>Options de résolution</summary>
+                <div class="settings-fields">
+                  <label>Choix de variable<select id="heuristic"><option value="mrv">Plus petit domaine (MRV)</option><option value="order">Ordre du modèle</option></select></label>
+                  <label>Recherche<select id="search-mode"><option value="all">Toutes les solutions</option><option value="first">Première solution</option></select></label>
+                </div>
+                <p>Jusqu’à 8 variables, 12 entiers par domaine et 32 contraintes. La trace est limitée à 3 500 étapes.</p>
+              </details>
+              <div class="form-footer">
+                <p class="error" id="form-error" role="alert" hidden></p>
+                <button type="submit" class="button primary run"><span class="play-icon" aria-hidden="true"></span> Lancer la résolution</button>
+              </div>
+            </form>
+          </article>
+          <article class="card visualizer" aria-labelledby="trace-heading">
+            <header class="card-header">
+              <div class="card-symbol diamond" aria-hidden="true"><span>◇</span></div>
+              <div><h3 id="trace-heading">Visualiseur</h3><p id="trace-subtitle">Propagation et recherche pas à pas</p></div>
+              <span class="status-tag" id="run-status"></span>
+            </header>
+            <div class="tabs" role="tablist" aria-label="Vues du visualiseur">
+              <button id="tab-domains" type="button" role="tab" data-tab="domains" aria-selected="true" aria-controls="panel-domains">Domaines</button>
+              <button id="tab-graph" type="button" role="tab" data-tab="graph" aria-selected="false" aria-controls="panel-graph" tabindex="-1">Graphe</button>
+              <button id="tab-solutions" type="button" role="tab" data-tab="solutions" aria-selected="false" aria-controls="panel-solutions" tabindex="-1">Solutions <span id="solution-tab-count" class="count">0</span></button>
+            </div>
+            <div class="trace-content">
+              <div class="step-message" id="step-message" aria-live="polite" aria-atomic="true"></div>
+              <div id="panel-domains" role="tabpanel" aria-labelledby="tab-domains"></div>
+              <div id="panel-graph" role="tabpanel" aria-labelledby="tab-graph" hidden></div>
+              <div id="panel-solutions" role="tabpanel" aria-labelledby="tab-solutions" hidden></div>
+            </div>
+            <section class="timeline" aria-label="Navigation dans la trace">
+              <div class="timeline-label"><span>Étape <strong id="step-position">0 / 0</strong></span><span id="step-depth"></span></div>
+              <input type="range" id="step-slider" min="0" max="0" value="0" aria-label="Étape de résolution">
+              <div class="transport">
+                <div class="transport-buttons">
+                  <button type="button" class="icon-button" id="step-first" aria-label="Première étape" title="Première étape">«</button>
+                  <button type="button" class="icon-button" id="step-prev" aria-label="Étape précédente" title="Étape précédente">‹</button>
+                  <button type="button" class="icon-button play-button" id="step-play" aria-label="Lire automatiquement" title="Lire automatiquement"><span class="play-icon" aria-hidden="true"></span></button>
+                  <button type="button" class="icon-button" id="step-next" aria-label="Étape suivante" title="Étape suivante">›</button>
+                  <button type="button" class="icon-button" id="step-last" aria-label="Dernière étape" title="Dernière étape">»</button>
+                </div>
+                <label class="speed">Vitesse <select id="speed"><option value="1600">0,5×</option><option value="800" selected>1×</option><option value="400">2×</option></select></label>
+              </div>
+            </section>
+            <section class="journal" aria-labelledby="journal-title">
+              <div class="journal-heading"><h4 id="journal-title">Journal des étapes</h4><span id="journal-count"></span></div>
+              <ol id="journal"></ol>
+            </section>
+          </article>
+        </div>
+      </section>
+      <section class="view" id="exemples" hidden>
+        <div class="work-heading"><div><p class="section-label">BIBLIOTHÈQUE</p><h2 tabindex="-1">Exemples à tester</h2><p>Charge un modèle, puis suis sa résolution dans l’atelier.</p></div></div>
+        <div class="example-grid" id="example-grid"></div>
+      </section>
+      <section class="view" id="notions" hidden>
+        <div class="work-heading"><div><p class="section-label">GUIDE DE L’ATELIER</p><h2 tabindex="-1">Notions clés</h2><p>Les termes français et anglais utilisés en programmation par contraintes.</p></div></div>
+        <div class="concepts">
+          <article class="card concept"><span>01 · Constraint satisfaction problem</span><h3>Variables, domaines, contraintes</h3><p>Un CSP se note <code>(X, D, C)</code>. Pour chaque variable de <code>X</code>, le domaine dans <code>D</code> liste les valeurs possibles. Les contraintes de <code>C</code> imposent les conditions à respecter. Une affectation complète qui satisfait toutes ces conditions est une solution.</p></article>
+          <article class="card concept"><span>02 · Arc consistency / AC-3</span><h3>Propagation</h3><p>Pour <code>A ≠ B</code>, chaque valeur de <code>A</code> doit avoir au moins une valeur compatible dans <code>B</code>. Si <code>B = {1}</code>, la valeur 1 n’a aucun support dans <code>A</code>. Le solveur la retire et remet en file les arcs qui dépendent du domaine modifié.</p></article>
+          <article class="card concept"><span>03 · Fixed point</span><h3>Point fixe</h3><p>Lorsque la file est vide, une nouvelle application des mêmes filtres laisse les domaines inchangés. Si plusieurs valeurs restent possibles, le solveur choisit une branche. Le triangle à deux couleurs atteint un point fixe, puis échoue dans toutes ses branches.</p></article>
+          <article class="card concept"><span>04 · Search / backtracking</span><h3>Décision et retour arrière</h3><p>Une décision fixe temporairement la valeur d’une variable. Le solveur propage ce choix. Un domaine vide rend la branche impossible. Le retour arrière restaure les domaines du parent avant l’essai suivant.</p></article>
+          <article class="card concept"><span>05 · Minimum remaining values</span><h3>Choisir la prochaine variable</h3><p>MRV sélectionne la variable indéterminée dont le domaine est le plus petit. En cas d’égalité, le solveur respecte l’ordre du modèle. Compare les traces avec l’option « Ordre du modèle » sur le problème des quatre reines.</p></article>
+        </div>
+      </section>
+      <footer class="page-footer"><span>ConstraintLab</span><span>Domaines finis · AC-3 · Recherche en profondeur</span></footer>
+    </main>
+  </div>
+</body>
+</html>
